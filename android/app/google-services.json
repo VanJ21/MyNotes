@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969323596514",
+    "project_id": "notes-flutter-tutorial-project",
+    "storage_bucket": "notes-flutter-tutorial-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969323596514:android:6a01269ffc21f888ccacbb",
+        "android_client_info": {
+          "package_name": "com.tutorialnote.mynotes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMIcisTNXsXj7uRUbzXsIQUyKY7roVvYQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
