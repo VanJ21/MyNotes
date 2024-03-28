@@ -1,9 +1,10 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/views/login_view.dart';
+import 'package:mynotes/views/notes_view.dart';
 import 'package:mynotes/views/register_view.dart';
-import 'firebase_options.dart';
+import 'package:mynotes/views/verify_email_view.dart';
 
 void main() {   
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,13 @@ void main() {
         useMaterial3: true,
       ),
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
+      routes: {
+        loginRoute: (context) => const LoginView(),
+        registerRoute: (context) => const RegisterView(),
+        notesRoute: (context) => const NotesView()  ,
+        verifyEmailRoute: (context) => const VerifyEmailView(),
+      }
     ));
 }
 
@@ -22,33 +30,38 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login')
-      ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-            options: DefaultFirebaseOptions.currentPlatform
-        ),
+    return FutureBuilder(
+        future: AuthService.firebase().initialize(),
         builder:(context, snapshot) {
           switch (snapshot.connectionState) {
             
             case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
-              final emailVerified = user?.emailVerified ?? false;
-              if (emailVerified) {
-                print("You are a verified user");
+              final user = AuthService.firebase().currentUser;
+
+              if (user != null) {
+                if (user.isEmailVerified) {
+                  return const NotesView();
+                } else {
+                  return const VerifyEmailView();
+                }
+              } else {
+                  return const LoginView();
               }
-              return const Text('Done');
+              // final emailVerified = user?.emailVerified ?? false;
+              // if (emailVerified) {
+              //   devtools.log("You are a verified user");
+              // } else {
+              //   devtools.log("You need to verify your email first");
+              //   return const VerifyEmailView();
+              // }
       
             default:
-              return const Text('Loading...');
+              return const CircularProgressIndicator();
           } 
           
-        },
-      )
+        }
     );
   }
   }
 
-
+enum MenuAction {logout}
