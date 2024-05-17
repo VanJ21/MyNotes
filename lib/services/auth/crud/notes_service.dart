@@ -4,7 +4,6 @@ import 'package:mynotes/services/auth/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart' show MissingPlatformDirectoryException, getApplicationDocumentsDirectory;
 import 'package:path/path.dart' show join;
-import 'package:sqflite/sqlite_api.dart';
 
 class NotesService {
   Database? _db;
