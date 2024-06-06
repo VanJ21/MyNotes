@@ -1,9 +1,13 @@
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:mynotes/constants/routes.dart";
 import "package:mynotes/services/auth/auth_exceptions.dart";
 import "package:mynotes/services/auth/auth_service.dart";
+import "package:mynotes/services/auth/bloc/auth_bloc.dart";
+import "package:mynotes/services/auth/bloc/auth_event.dart";
+import "package:mynotes/services/auth/bloc/auth_state.dart";
 import "package:mynotes/utilities/dialogs/error_dialog.dart";
-
+import "package:mynotes/utilities/dialogs/loading_dialog.dart";
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,8 +19,6 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-
-  
   @override
   void initState() {
     _email = TextEditingController();
@@ -30,11 +32,28 @@ class _LoginViewState extends State<LoginView> {
     _password.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (state is AuthStateLoggedOut) {
+          if (state.exception is UserNotFoundAuthException) {
+            await showErrorDialog(context, 'Cannot find a user with the credentials provided');
+          } else if (state.exception
+              is InvalidCredentialsAuthException) {
+            await showErrorDialog(context, 'Wrong credentials');
+          } else if (state.exception is GenericAuthException) {
+            await showErrorDialog(context, 'Something weird happened');
+          }
+        }
+      },
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
+              const Text('Please log in to your account in order to interact with and create notes!'),
               TextField(
                 controller: _email,
                 enableSuggestions: false,
@@ -45,56 +64,44 @@ class _LoginViewState extends State<LoginView> {
                 ),
               ),
               TextField(
-                controller: _password,
-                obscureText: true,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: const InputDecoration(
-                  hintText: 'Enter your password here',
-                )
-              ),
+                  controller: _password,
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter your password here',
+                  )),
               TextButton(
                   onPressed: () async {
                     final email = _email.text;
                     final password = _password.text;
-                  try {
-                    await AuthService.firebase().logIn(email: email, password: password);
-                    
-                    final user = AuthService.firebase().currentUser;
-                    if (user?.isEmailVerified ?? false) {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                      notesRoute, 
-                      (route) => false);
-                    } else {
-                      Navigator.of(context).pushNamed(verifyEmailRoute);
-                    }
-                    
-                  } on UserNotFoundAuthException {
-                    await showErrorDialog(context, 'User not found');
-                  } on InvalidCredentialsAuthException {
-                    await showErrorDialog(context, 'Invalid credentials');
-                  } on GenericAuthException {
-                    await showErrorDialog(context, 'Something weird happened');
-                  } catch (e) {
-                    await showErrorDialog(context, 'Something weird happened');
-                  }
-                  }, 
-                  child: const Text('Login')
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      registerRoute,
-                      (route) => false
-                    );
-                  }, 
-                  child: const Text('Not registered yet?'),
-                )
+                    context
+                        .read<AuthBloc>()
+                        .add(AuthEventLogIn(email, password));
+                  },
+                  child: const Text('Login')),
+              TextButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                    const AuthEventShouldRegister()
+                  );
+                },
+                child: const Text('Not registered yet?'),
+              ),
+          
+              TextButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                    AuthEventForgotPassword()
+                  );
+                },
+                child: const Text('Forgot password?'),
+              )
+              
             ],
           ),
+        ),
+      ),
     );
-
   }
 }
-
-
